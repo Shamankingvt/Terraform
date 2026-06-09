@@ -71,6 +71,27 @@ data "aws_subnets" "default" {
   }
 }
 
+resource "aws_lb" "example" {
+  name = "terraform-asg-example"
+  load_balancer_type = "application"
+  subnets = data.aws_subnets.default.ids
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.example.arn
+  port = 80
+  protocol = "HTTP"
+  # By default, return a simple 404 page
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+    content_type = "text/plain"
+    message_body = "404: page not found"
+    status_code = 404
+    }
+  }
+}
+
 resource "aws_security_group" "instance" {
   name = "terraform-example-instance"
   ingress {
@@ -85,6 +106,24 @@ variable "server_port" {
   description = "The port the server will use for HTTP requests"
   type = number
   default = 8080
+}
+
+resource "aws_security_group" "alb" {
+  name = "terraform-example-alb"
+  # Allow inbound HTTP requests
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+}
+  # Allow all outbound requests
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 /* output "public_ip" {
@@ -108,8 +147,6 @@ resource "aws_subnet" "subnet-1" {
     Name = "dev-subnet"
   }
 }
-
-
 
 # resource "<provider>_<resource_type>" "name" {
 #       config option
