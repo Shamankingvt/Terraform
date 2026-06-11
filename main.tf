@@ -64,3 +64,9 @@ output "dynamodb_table_name" {
     value = aws_dynamodb_table.terraform_locks.name
     description = "The name of the DynamoDB table"
 }
+
+/* terraform {
+backend "<BACKEND_NAME>" {
+[CONFIG...]
+}
+} */
